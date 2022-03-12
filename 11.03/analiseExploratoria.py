@@ -12,7 +12,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 import shap
 
-df = pd.read_csv(r'D:\Users\andre\Documents\Faculdade\inteligenciaArtificial\11.03\docs\train.csv')
+df = pd.read_csv(r'D:\Users\andre\Documents\GitHub\interpretacao_dados\11.03\docs\train.csv')
 
 df.describe()
 
@@ -129,4 +129,39 @@ df2.sort_values(by='Score', ascending=False)
 explainer = shap.Explainer(xgb_model)
 shap_values = explainer(X_test)
 
-shap.plots.waterfall(shap_values[0])
+shap.plots.waterfall(shap_values[3])
+
+
+shap.initjs()
+shap.plots.force(shap_values[1]) # [1] é o indice da base de teste (X_test)
+
+shap.initjs()
+shap.plots.force(shap_values)
+ 
+shap.summary_plot(shap_values)
+
+shap.plots.bar(shap_values)
+
+shap.plots.scatter(shap_values[:,'total_day_minutes'], color=shap_values)
+
+explainer = shap.TreeExplainer(xgb_model)
+expected_value = explainer.expected_value
+if isinstance(expected_value, list):
+    expected_value = expected_value[1]
+print(f"Explainer expected value: {expected_value}")
+
+select = range(20)
+features = X_test.iloc[select]
+features_display = X_test.loc[features.index]
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    shap_values = explainer.shap_values(features)[1]
+    shap_interaction_values = explainer.shap_interaction_values(features)
+if isinstance(shap_interaction_values, list):
+    shap_interaction_values = shap_interaction_values[1]
+    
+shap.decision_plot(expected_value, shap_values, features_display)
+
+shap.plots.scatter(shap_values[:,'total_day_minutes'], color=shap_values)
+
